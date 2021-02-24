@@ -8,25 +8,16 @@ import scraper.Scraper;
 
 import org.eclipse.swt.widgets.Button;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import javax.swing.JOptionPane;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.events.TouchListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.events.TouchEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -34,20 +25,20 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.layout.FillLayout;
-import swing2swt.layout.FlowLayout;
-import org.eclipse.swt.custom.StackLayout;
 
 public class Window {
 
 	protected Shell shell;
 
-	public static final String title = "Web Scraper by Ismael Reyes";
-	public static final String[] tags = { "h1", "h2", "p", "ul" };
+	public static final String title = "Scrapminator";
+	public static String tag = "";
+	//public static final String[] tags = { "h1", "h2", "h3", "h4", "h5", "h6", "p", "ul" };
 	public static String url = "https://mansiondominator.wordpress.com/";
 	List<String> scrapedData;
 	public static boolean removeEmptyLines;
 	public static Scraper scraper;
 	private Text txtUrl;
+	private Text txtTag;
 	private Text txtScrap;
 
 	/**
@@ -113,11 +104,22 @@ public class Window {
 		lblUrl.setSize(25, 15);
 		lblUrl.setText("URL");
 
-		Combo combo = new Combo(inputData, SWT.NONE);
+		/*Combo combo = new Combo(inputData, SWT.NONE);
 		combo.setLocation(339, 7);
 		combo.setSize(43, 23);
 		combo.setItems(tags);
-		combo.select(0);
+		combo.select(0);*/
+		
+		txtTag = new Text(inputData, SWT.BORDER);
+		txtTag.setLocation(339, 7);
+		txtTag.setSize(43, 23);
+		txtTag.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent arg0) {
+				tag = txtTag.getText();
+			}
+		});
+		txtTag.setText(tag);
+		
 
 		Button btnScrap = new Button(inputData, SWT.NONE);
 		btnScrap.setLocation(388, 5);
@@ -125,8 +127,12 @@ public class Window {
 		btnScrap.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				try {
-					scrapedData = scraper.scrapUrl(url, combo.getItem(combo.getSelectionIndex()), removeEmptyLines);
-					txtScrap.setText(formatData(scrapedData));
+					scrapedData = scraper.scrapUrl(url, tag, removeEmptyLines);
+					if (scrapedData.isEmpty()) {
+						txtScrap.setText("*****Empty*****");
+					} else {
+						txtScrap.setText(formatData(scrapedData));
+					}
 				} catch (IOException e1) {
 					System.out.println(e1);
 					JOptionPane.showMessageDialog(null, "No ha sido posible scrapear el contenido");
@@ -150,19 +156,52 @@ public class Window {
 		lblTag.setBounds(290, 10, 43, 15);
 		lblTag.setText("Etiqueta");
 
+		Button btnScraphtml = new Button(inputData, SWT.NONE);
+		btnScraphtml.setBounds(559, 5, 75, 25);
+		btnScraphtml.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					// scrapedData = scraper.scrapUrl(url);
+					txtScrap.setText(scraper.scrapUrl(url));
+				} catch (IOException e1) {
+					System.out.println(e1);
+					JOptionPane.showMessageDialog(null, "No ha sido posible scrapear el contenido");
+					e1.printStackTrace();
+				}
+			}
+		});
+		btnScraphtml.setText("ScrapHTML");
+
 		txtScrap = new Text(outerGroup, SWT.WRAP | SWT.BORDER);
 
 		Composite exportPanel = new Composite(outerGroup, SWT.NONE);
 
 		Button btnExportCsv = new Button(exportPanel, SWT.NONE);
-		btnExportCsv.setBounds(554, 10, 80, 25);
+		btnExportCsv.setBounds(554, 43, 80, 25);
 		btnExportCsv.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				exportToCsv();
 			}
 		});
 		btnExportCsv.setText("Exportar CSV");
+		
+		Button btnCleanUp = new Button(exportPanel, SWT.NONE);
+		btnCleanUp.setBounds(10, 43, 75, 25);
+		btnCleanUp.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				cleanUp();
+			}
+		});
+		btnCleanUp.setText("Clean up");
 
+	}
+
+	protected void cleanUp() {
+		url = "";
+		tag = "";
+		txtUrl.setText(url);
+		txtTag.setText(tag);
+		txtScrap.setText("");
 	}
 
 	private String formatData(List<String> scrapedData) {
@@ -174,12 +213,11 @@ public class Window {
 	}
 
 	protected void exportToCsv() {
-		try {
-			scraper.exportToCsv(scrapedData, url);
+		/*try {
+			//scraper.exportToCsv(scrapedData, url);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		}
+		}*/
 
 	}
-
 }
